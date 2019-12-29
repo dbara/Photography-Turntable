@@ -1,6 +1,11 @@
 #include "IRremote.h"
 #include "IRremoteInt.h"
 
+#ifdef IR_TIMER_USE_ESP32
+hw_timer_t *timer;
+void IRTimer(); // defined in IRremote.cpp
+#endif
+
 //+=============================================================================
 // Decodes the received IR message
 // Returns 0 if no data ready, 1 if data ready.
@@ -15,75 +20,74 @@ int  IRrecv::decode (decode_results *results)
 
 	if (irparams.rcvstate != STATE_STOP)  return false ;
 
-#if DECODE_NEC
-	DBG_PRINTLN("Attempting NEC decode");
-	if (decodeNEC(results))  return true ;
-#endif
+// #if DECODE_NEC
+// 	DBG_PRINTLN("Attempting NEC decode");
+// 	if (decodeNEC(results))  return true ;
+// #endif
 
-#if DECODE_SONY
-	DBG_PRINTLN("Attempting Sony decode");
-	if (decodeSony(results))  return true ;
-#endif
+// #if DECODE_SONY
+// 	DBG_PRINTLN("Attempting Sony decode");
+// 	if (decodeSony(results))  return true ;
+// #endif
 
-#if DECODE_SANYO
-	DBG_PRINTLN("Attempting Sanyo decode");
-	if (decodeSanyo(results))  return true ;
-#endif
+// #if DECODE_SANYO
+// 	DBG_PRINTLN("Attempting Sanyo decode");
+// 	if (decodeSanyo(results))  return true ;
+// #endif
 
-#if DECODE_MITSUBISHI
-	DBG_PRINTLN("Attempting Mitsubishi decode");
-	if (decodeMitsubishi(results))  return true ;
-#endif
+// #if DECODE_MITSUBISHI
+// 	DBG_PRINTLN("Attempting Mitsubishi decode");
+// 	if (decodeMitsubishi(results))  return true ;
+// #endif
 
-#if DECODE_RC5
-	DBG_PRINTLN("Attempting RC5 decode");
-	if (decodeRC5(results))  return true ;
-#endif
+// #if DECODE_RC5
+// 	DBG_PRINTLN("Attempting RC5 decode");
+// 	if (decodeRC5(results))  return true ;
+// #endif
 
-#if DECODE_RC6
-	DBG_PRINTLN("Attempting RC6 decode");
-	if (decodeRC6(results))  return true ;
-#endif
+// #if DECODE_RC6
+// 	DBG_PRINTLN("Attempting RC6 decode");
+// 	if (decodeRC6(results))  return true ;
+// #endif
 
-#if DECODE_PANASONIC
-	DBG_PRINTLN("Attempting Panasonic decode");
-	if (decodePanasonic(results))  return true ;
-#endif
+// #if DECODE_PANASONIC
+// 	DBG_PRINTLN("Attempting Panasonic decode");
+// 	if (decodePanasonic(results))  return true ;
+// #endif
 
-#if DECODE_LG
-	DBG_PRINTLN("Attempting LG decode");
-	if (decodeLG(results))  return true ;
-#endif
+// #if DECODE_LG
+// 	DBG_PRINTLN("Attempting LG decode");
+// 	if (decodeLG(results))  return true ;
+// #endif
 
-#if DECODE_JVC
-	DBG_PRINTLN("Attempting JVC decode");
-	if (decodeJVC(results))  return true ;
-#endif
+// #if DECODE_JVC
+// 	DBG_PRINTLN("Attempting JVC decode");
+// 	if (decodeJVC(results))  return true ;
+// #endif
 
-#if DECODE_SAMSUNG
-	DBG_PRINTLN("Attempting SAMSUNG decode");
-	if (decodeSAMSUNG(results))  return true ;
-#endif
+// #if DECODE_SAMSUNG
+// 	DBG_PRINTLN("Attempting SAMSUNG decode");
+// 	if (decodeSAMSUNG(results))  return true ;
+// #endif
 
-#if DECODE_WHYNTER
-	DBG_PRINTLN("Attempting Whynter decode");
-	if (decodeWhynter(results))  return true ;
-#endif
+// #if DECODE_WHYNTER
+// 	DBG_PRINTLN("Attempting Whynter decode");
+// 	if (decodeWhynter(results))  return true ;
+// #endif
 
-#if DECODE_AIWA_RC_T501
-	DBG_PRINTLN("Attempting Aiwa RC-T501 decode");
-	if (decodeAiwaRCT501(results))  return true ;
-#endif
+// #if DECODE_AIWA_RC_T501
+// 	DBG_PRINTLN("Attempting Aiwa RC-T501 decode");
+// 	if (decodeAiwaRCT501(results))  return true ;
+// #endif
 
-#if DECODE_DENON
-	DBG_PRINTLN("Attempting Denon decode");
-	if (decodeDenon(results))  return true ;
-#endif
+// #if DECODE_DENON
+// 	DBG_PRINTLN("Attempting Denon decode");
+// 	if (decodeDenon(results))  return true ;
+// #endif
 
-#if DECODE_LEGO_PF
-	DBG_PRINTLN("Attempting Lego Power Functions");
-	if (decodeLegoPowerFunctions(results))  return true ;
-#endif
+// #if DECODE_LEGO_PF
+// 	DBG_PRINTLN("Attempting Lego Power Functions");
+// 	if (decodeLegoPowerFunctions(results))  return true ;
 
 	// decodeHash returns a hash on any input.
 	// Thus, it needs to be last in the list.
@@ -117,6 +121,17 @@ IRrecv::IRrecv (int recvpin, int blinkpin)
 //
 void  IRrecv::enableIRIn ( )
 {
+// Interrupt Service Routine - Fires every 50uS
+#ifdef ESP32
+	// ESP32 has a proper API to setup timers, no weird chip macros needed
+	// simply call the readable API versions :)
+	// 3 timers, choose #1, 80 divider nanosecond precision, 1 to count up
+	timer = timerBegin(1, 80, 1);
+	timerAttachInterrupt(timer, &IRTimer, 1);
+	// every 50ns, autoreload = true
+	timerAlarmWrite(timer, 50, true);
+	timerAlarmEnable(timer);
+#else
 	cli();
 	// Setup pulse clock timer interrupt
 	// Prescale /8 (16M/8 = 0.5 microseconds per tick)
@@ -130,6 +145,7 @@ void  IRrecv::enableIRIn ( )
 	TIMER_RESET;
 
 	sei();  // enable interrupts
+#endif
 
 	// Initialize state machine variables
 	irparams.rcvstate = STATE_IDLE;
