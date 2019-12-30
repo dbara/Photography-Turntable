@@ -67,7 +67,7 @@ void setup()
 
   nDevices = 0;
   //  for (address = 1; address < 127; address++ )
-  for (address = 30; address < 50; address++ )
+  for (address = 1; address < 127; address++ )
   {
     // The i2c_scanner uses the return value of
     // the Write.endTransmisstion to see if
@@ -85,7 +85,7 @@ void setup()
       //Serial.print(address);
       //Serial.println("!");
 
-      delay(2500);
+      delay(50);
       //#define LCD_ADDRESS address
       delay(50);
       lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, address, ZURUECKLIGHT);
@@ -93,8 +93,7 @@ void setup()
       lcdI2C.clear();
       delay(50);
       lcdI2C.print("Alles ready?");
-      delay(1000);
-      lcdI2C.print("");
+      delay(50);
       lcdI2C.selectLine(2);
       for (int i = 0 ; i < 17 ; i++)
       {
