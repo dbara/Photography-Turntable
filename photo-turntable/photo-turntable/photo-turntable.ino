@@ -65,8 +65,8 @@ void setup()
   int addessI2C;
 
   Serial.println("Scanning...");
-  delay(500);
-  
+  delay(250);
+
   nDevices = 0;
   for (address = 1; address < 127; address++ )
   {
@@ -100,10 +100,12 @@ void setup()
   else
     Serial.println("done\n");
 
+  delay(250);
   // initialize the lcd
   lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, addessI2C, ZURUECKLIGHT);
+  delay(250);
   lcdI2C.print("Alles ready?");
-  delay(50);
+  delay(500);
   lcdI2C.selectLine(2);
   for (int i = 0 ; i < 17 ; i++)
   {
@@ -122,6 +124,7 @@ void setup()
   irrecv.enableIRIn();
   irrecv.blink13(true);
 }
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 // Main logic of your circuit. It defines the interaction between the components you selected. After setup, it runs over and over again, in an eternal loop.
 void loop()
@@ -151,6 +154,13 @@ void loop()
     {
       select = true;
       delay(5);
+    }
+    if (results.value == 3810010651)
+    {
+      Serial.println("resetting");
+      resetFunc();
+      delay(5);
+      Serial.println("resetted");
     }
   }
 
