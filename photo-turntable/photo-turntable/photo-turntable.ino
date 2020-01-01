@@ -54,9 +54,7 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
-  delay(4250);
   Wire.begin();
-  delay(250);
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
   Serial.begin(9600);
@@ -67,7 +65,6 @@ void setup()
   int addessI2C;
 
   Serial.println("Scanning...");
-  delay(250);
 
   nDevices = 0;
   for (address = 1; address < 127; address++ )
@@ -102,10 +99,10 @@ void setup()
   else
     Serial.println("done\n");
 
-  delay(250);
+  delay(200);
   // initialize the lcd
   lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, addessI2C, ZURUECKLIGHT);
-  delay(250);
+  delay(500);
   lcdI2C.print("Alles ready?");
   delay(500);
   lcdI2C.selectLine(2);
@@ -114,7 +111,7 @@ void setup()
     lcdI2C.print("\333");
     delay(600 - i * 35);
   }
-  delay(250);
+  delay(500);
 
 
   rotaryEncDButton.init();
