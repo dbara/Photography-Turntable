@@ -54,7 +54,9 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
+  delay(2250);
   Wire.begin();
+  delay(250);
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
   Serial.begin(9600);
@@ -126,7 +128,8 @@ void setup()
 }
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
-// Main logic of your circuit. It defines the interaction between the components you selected. After setup, it runs over and over again, in an eternal loop.
+// Main logic of your circuit. It defines the interaction between the components you selected.
+//After setup, it runs over and over again, in an eternal loop.
 void loop()
 {
   char menuDir = ' ';
@@ -158,6 +161,7 @@ void loop()
     if (results.value == 3810010651)
     {
       Serial.println("resetting");
+      delay(15);
       resetFunc();
       delay(5);
       Serial.println("resetted");
