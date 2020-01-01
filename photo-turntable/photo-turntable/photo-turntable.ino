@@ -54,7 +54,7 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
-  delay(2250);
+  delay(4250);
   Wire.begin();
   delay(250);
   // Setup Serial which is useful for debugging
