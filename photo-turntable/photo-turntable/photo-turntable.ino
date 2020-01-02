@@ -343,10 +343,6 @@ void loop()
         state = FOTOS;
       break;
   }
-
-
-
-
 }
 
 String printState(int curstate)
@@ -375,7 +371,6 @@ String printState(int curstate)
     case 10:
       return "Anzahl Fotos:";
   }
-
 }
 
 
@@ -409,7 +404,7 @@ void stills() {
     delay(750);
     int delay_time = SLOW;
     int numOfSteps = fullRotation / angles;
-    float accSteps = 600;
+    float accSteps = 500;
     for (int i = 0; i < numOfSteps; i++ )
     {
       if (i < accSteps)
@@ -453,7 +448,7 @@ void video() {
   int delay_time = SLOW;
   int fast = 300 + 12 * (100 - speed);
   int numOfSteps = fullRotation;
-  float accSteps = 600;
+  float accSteps = 800;
   for (int i = 0; i < numOfSteps; i++ )
   {
     if (i < accSteps)
