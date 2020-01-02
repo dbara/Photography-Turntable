@@ -403,7 +403,7 @@ void stills() {
     delay(750);
     int delay_time = SLOW;
     int numOfSteps = fullRotation / angles;
-    float accSteps = 500;
+    float accSteps = 400;
     for (int i = 0; i < numOfSteps; i++ )
     {
       if (i < accSteps)
