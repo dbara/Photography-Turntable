@@ -51,14 +51,13 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 //aka #define LCD_ADDRESS 39
 //#define LCD_ADDRESS 0x23
 
-void(* resetFunc) (void) = 0; //declare reset function @ address 0
+//declare reset function @ address 0
+void(* resetFunc) (void) = 0;
 
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
-  delay(1500);
   Wire.begin();
-  delay(500);
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
   //Serial.begin(9600);
@@ -111,19 +110,19 @@ void setup()
     //Serial.println("done\n");
   }
 
-  delay(1500);
+  delay(1000);
   // initialize the lcd
   lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, addessI2C, ZURUECKLIGHT);
-  delay(500);
+  delay(50);
   lcdI2C.print("Alles ready?");
-  delay(700);
+  delay(50);
   lcdI2C.selectLine(2);
   for (int i = 0 ; i < 17 ; i++)
   {
     lcdI2C.print("\333");
     delay(600 - i * 35);
   }
-  delay(200);
+  delay(50);
 
 
   rotaryEncDButton.init();
