@@ -51,20 +51,24 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 //aka #define LCD_ADDRESS 39
 //#define LCD_ADDRESS 0x23
 
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
+
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
+  delay(1500);
   Wire.begin();
+  delay(500);
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
-  Serial.begin(9600);
-  while (!Serial);             // Leonardo: wait for serial monitor
-  Serial.println("\nI2C Scan");
+  //Serial.begin(9600);
+  //while (!Serial);             // Leonardo: wait for serial monitor
+  //Serial.println("\nI2C Scan");
   byte error, address;
   int nDevices;
   int addessI2C;
 
-  Serial.println("Scanning...");
+  //Serial.println("Scanning...");
 
   nDevices = 0;
   for (address = 1; address < 127; address++ )
@@ -77,41 +81,49 @@ void setup()
 
     if (error == 0)
     {
-      Serial.print("I2C device found at address ");
+      //Serial.print("I2C device found at address ");
       if (address < 16)
-        Serial.print("0");
-      Serial.print(address);
-      Serial.println("!");
+      {
+        //Serial.print("0");
+      }
+      //Serial.print(address);
+      //Serial.println("!");
       addessI2C = address;
-      Serial.println(addessI2C);
+      //Serial.println(addessI2C);
       nDevices++;
     }
     else if (error == 4)
     {
-      Serial.print("Unknown error at address ");
+      //Serial.print("Unknown error at address ");
       if (address < 16)
-        Serial.print("0");
-      Serial.println(address);
+      {
+        //Serial.print("0");
+      }
+      //Serial.println(address);
     }
   }
   if (nDevices == 0)
-    Serial.println("No I2C devices found\n");
+  {
+    //Serial.println("No I2C devices found\n");
+  }
   else
-    Serial.println("done\n");
+  {
+    //Serial.println("done\n");
+  }
 
-  delay(200);
+  delay(1500);
   // initialize the lcd
   lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, addessI2C, ZURUECKLIGHT);
   delay(500);
   lcdI2C.print("Alles ready?");
-  delay(500);
+  delay(700);
   lcdI2C.selectLine(2);
   for (int i = 0 ; i < 17 ; i++)
   {
     lcdI2C.print("\333");
     delay(600 - i * 35);
   }
-  delay(500);
+  delay(200);
 
 
   rotaryEncDButton.init();
@@ -123,7 +135,6 @@ void setup()
   irrecv.enableIRIn();
   irrecv.blink13(true);
 }
-void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 // Main logic of your circuit. It defines the interaction between the components you selected.
 //After setup, it runs over and over again, in an eternal loop.
@@ -157,11 +168,11 @@ void loop()
     }
     if (results.value == 3810010651)
     {
-      Serial.println("resetting");
+      //Serial.println("resetting");
       delay(15);
       resetFunc();
       delay(5);
-      Serial.println("resetted");
+      //Serial.println("resetted");
     }
   }
 
