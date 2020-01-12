@@ -8,37 +8,36 @@
 #include <Wire.h>
 
 // Pin Definitions
-#define RotaryEncoder_PIN_D	4
-#define RotaryEncoder_PIN_CLK	2
-#define RotaryEncoder_PIN_S1	5
-#define STEPPER_PIN_STEP	6
-#define STEPPER_PIN_DIR	7
-
-#define SLOW 5000
-#define FAST 500
+#define RotaryEncoder_PIN_CLK 2
+#define RotaryEncoder_PIN_D  4
+#define RotaryEncoder_PIN_S1  5
+#define RECV_PIN 6
+#define EN 8
+#define DIR 9
+#define PUL 10
 
 // set default parameters
-int speed = 100;
+const long fullRotation = 102400;
+const int accSteps = ((fullRotation) / 100);
+const int basicSpeed = 20;
 int angles = 8;
-const int fullRotation = 18300;
+int speed = 100;
 
 // Define LCD characteristics
 #define LCD_ROWS 2
 #define LCD_COLUMNS 16
 #define SCROLL_DELAY 150
 #define ZURUECKLIGHT 255
-long rotaryEncDOldPosition  = 0;
 
 // object initialization
-Encoder rotaryEncD(RotaryEncoder_PIN_D, RotaryEncoder_PIN_CLK);
-Button rotaryEncDButton(RotaryEncoder_PIN_S1);
-LiquidCrystal_PCF8574 lcdI2C;
-IRsend ir_led;
-
-//IR Receiver
-#define RECV_PIN 8
-IRrecv irrecv(RECV_PIN);
+Encoder rotaryEncD(RotaryEncoder_PIN_D, RotaryEncoder_PIN_CLK); //Rotary Encoder
+Button rotaryEncDButton(RotaryEncoder_PIN_S1); //Rotary Encoder Button
+LiquidCrystal_PCF8574 lcdI2C; //LCD Display
+IRsend ir_led; //IR Sender
+IRrecv irrecv(RECV_PIN); //IR Receiver
 decode_results results;
+
+long rotaryEncDOldPosition  = 0;
 
 enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAHL, VIDZURUECK, STILZURUECK, CHANGEGESCHWINDIGKEIT, CHANGEANZAHL} state = FOTOS, oldState = VIDEO;
 
@@ -47,8 +46,7 @@ enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAH
 // Try the given addresses by Un/commenting the following rows until LCD works follow the serial monitor prints.
 // To find your LCD address go to: http://playground.arduino.cc/Main/I2cScanner and run example.
 //#define LCD_ADDRESS 0x3F
-//#define LCD_ADDRESS 0x27
-//aka #define LCD_ADDRESS 39
+//#define LCD_ADDRESS 0x27 //aka #define LCD_ADDRESS 39
 //#define LCD_ADDRESS 0x23
 
 //declare reset function @ address 0
@@ -57,17 +55,18 @@ void(* resetFunc) (void) = 0;
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
+  delay(1000);
   Wire.begin();
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
-  //Serial.begin(9600);
-  //while (!Serial);             // Leonardo: wait for serial monitor
-  //Serial.println("\nI2C Scan");
+  Serial.begin(9600);
+  while (!Serial);             // Leonardo: wait for serial monitor
+  Serial.println("\nI2C Scan");
   byte error, address;
   int nDevices;
   int addessI2C;
 
-  //Serial.println("Scanning...");
+  Serial.println("Scanning...");
 
   nDevices = 0;
   for (address = 1; address < 127; address++ )
@@ -80,39 +79,40 @@ void setup()
 
     if (error == 0)
     {
-      //Serial.print("I2C device found at address ");
+      Serial.print("I2C device found at address ");
       if (address < 16)
       {
-        //Serial.print("0");
+        Serial.print("0");
       }
-      //Serial.print(address);
-      //Serial.println("!");
+      Serial.print(address);
+      Serial.println("!");
       addessI2C = address;
-      //Serial.println(addessI2C);
+      Serial.println(addessI2C);
       nDevices++;
     }
     else if (error == 4)
     {
-      //Serial.print("Unknown error at address ");
+      Serial.print("Unknown error at address ");
       if (address < 16)
       {
-        //Serial.print("0");
+        Serial.print("0");
       }
-      //Serial.println(address);
+      Serial.println(address);
     }
   }
   if (nDevices == 0)
   {
-    //Serial.println("No I2C devices found\n");
+    Serial.println("No I2C devices found\n");
   }
   else
   {
-    //Serial.println("done\n");
+    Serial.println("done\n");
   }
 
-  delay(1000);
+  delay(10);
   // initialize the lcd
   lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, addessI2C, ZURUECKLIGHT);
+  // lcdI2C.begin(LCD_COLUMNS, LCD_ROWS, 39, ZURUECKLIGHT);
   delay(50);
   lcdI2C.print("Alles ready?");
   delay(50);
@@ -128,11 +128,14 @@ void setup()
   rotaryEncDButton.init();
   pinMode(RotaryEncoder_PIN_S1, INPUT_PULLUP);
 
-  pinMode(STEPPER_PIN_STEP, OUTPUT);
+  //  pinMode(STEPPER_PIN_STEP, OUTPUT);
 
   //IR Receiver strart
   irrecv.enableIRIn();
   irrecv.blink13(true);
+  pinMode(EN, OUTPUT);
+  pinMode(DIR, OUTPUT);
+  pinMode(PUL, OUTPUT);
 }
 
 // Main logic of your circuit. It defines the interaction between the components you selected.
@@ -167,11 +170,11 @@ void loop()
     }
     if (results.value == 3810010651)
     {
-      //Serial.println("resetting");
+      Serial.println("resetting");
       delay(15);
       resetFunc();
       delay(5);
-      //Serial.println("resetted");
+      Serial.println("resetted");
     }
   }
 
@@ -179,7 +182,7 @@ void loop()
   //Read encoder new position
   long rotaryEncDNewPosition = rotaryEncD.read() / 4;
   if (rotaryEncDNewPosition != rotaryEncDOldPosition) {
-    //Serial.println(rotaryEncDNewPosition);
+    Serial.println(rotaryEncDNewPosition);
     if (rotaryEncDNewPosition < rotaryEncDOldPosition)
     {
       menuDir = 'L';
@@ -231,7 +234,7 @@ void loop()
         state = VIDZURUECK;
 
       if (select) {
-        video();
+        //        video();
 
       }
       break;
@@ -372,20 +375,25 @@ String printState(int curstate)
   }
 }
 
-
-void stills() {
+void stills()
+{
   lcdI2C.clear();
   lcdI2C.print(F("Start in 3"));
+  Serial.println("Start in 3");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 2"));
+  Serial.println("Start in 2");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 1"));
+  Serial.println("Start in 1");
   delay(1000);
   for (int i = 0 ; i < angles ; i++) {
     int imagesToTake = angles - i - 1;
-    delay(300);
+    long numOfSteps = (fullRotation / angles);
+    long delayTime = 0;
+    long rpm = 0;
     lcdI2C.clear();
     irStillsShot();
     if (imagesToTake == 1)
@@ -400,79 +408,38 @@ void stills() {
       lcdI2C.print(imagesToTake);
       lcdI2C.print(F(" Fotos"));
     }
-    delay(750);
-    int delay_time = SLOW;
-    int numOfSteps = fullRotation / angles;
-    float accSteps = 400;
-    for (int i = 0; i < numOfSteps; i++ )
+    delay(50);
+    for (long n = 0; n < numOfSteps; n++)
     {
-      if (i < accSteps)
+      if (n < accSteps)
       {
-        delay_time = (SLOW - FAST) * pow(float(i - accSteps), 2) / float(accSteps * accSteps) + FAST;
+        delayTime = (accSteps - n );
+
+        //Serial.println(delayTime);
       }
-      else if (i > numOfSteps - accSteps)
+      else if (n > numOfSteps - accSteps)
       {
-        delay_time = (SLOW - FAST) * pow(float(i - numOfSteps + accSteps), 2) / float(accSteps * accSteps) + FAST;
+        delayTime = (n - numOfSteps + accSteps);
+
+        //Serial.println(delayTime);
       }
       else
       {
-        delay_time = FAST;
+        delayTime = 0;
       }
 
-      digitalWrite(STEPPER_PIN_STEP, HIGH);   // turn the LED on (HIGH is the voltage level)
-      delayMicroseconds(delay_time);                       // wait for a second
-      digitalWrite(STEPPER_PIN_STEP, LOW);    // turn the LED off by making the voltage LOW
-      delayMicroseconds(delay_time);                       // wait for a second
+      rpm = basicSpeed + (delayTime / 20);
+
+      digitalWrite(DIR, LOW);
+      digitalWrite(EN, HIGH);
+      digitalWrite(PUL, LOW);
+      delayMicroseconds(rpm);
+      digitalWrite(PUL, HIGH);
+      delayMicroseconds(rpm);
 
     }
+    delay(250);
   }
-}
-
-
-void video() {
-  delay(300);
-  lcdI2C.clear();
-  lcdI2C.print(F("Start in 3"));
-  delay(1000);
-  lcdI2C.clear();
-  lcdI2C.print(F("Start in 2"));
-  delay(1000);
-  lcdI2C.clear();
-  lcdI2C.print(F("Start in 1"));
-  delay(1000);
-  lcdI2C.clear();
-  irVideoShot();
-  lcdI2C.print(F("Video gestartet"));
-  delay(750);
-  int delay_time = SLOW;
-  int fast = 300 + 12 * (100 - speed);
-  int numOfSteps = fullRotation;
-  float accSteps = 800;
-  for (int i = 0; i < numOfSteps; i++ )
-  {
-    if (i < accSteps)
-    {
-      delay_time = (SLOW - fast) * pow(float(i - accSteps), 2) / float(accSteps * accSteps) + fast;
-    }
-    else if (i > numOfSteps - accSteps)
-    {
-      delay_time = (SLOW - fast) * pow(float(i - numOfSteps + accSteps), 2) / float(accSteps * accSteps) + fast;
-    }
-    else
-    {
-      delay_time = fast;
-    }
-    digitalWrite(STEPPER_PIN_STEP, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delayMicroseconds(delay_time);                       // wait for a second
-    digitalWrite(STEPPER_PIN_STEP, LOW);    // turn the LED off by making the voltage LOW
-    delayMicroseconds(delay_time);                       // wait for a second
-  }
-  delay(750);
-  irVideoShot();
-  lcdI2C.clear();
-  lcdI2C.print(F("Video beendet"));
-  delay(1200);
-  lcdI2C.clear();
 }
 
 //Sony IR-Codes:
@@ -489,6 +456,7 @@ void video() {
 //Z-        863119    D2B8F   // Zoom out
 
 void irStillsShot() {
+  Serial.println("foto...");
   for (int i = 0; i < 3; i++)
   {
     ir_led.sendSony(0xB4B8F, 20);
@@ -499,6 +467,7 @@ void irStillsShot() {
 }
 
 void irVideoShot() {
+  Serial.println("video...");
   for (int i = 0; i < 3; i++)
   {
     ir_led.sendSony(0x12B8F, 20);
