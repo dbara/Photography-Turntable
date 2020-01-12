@@ -55,7 +55,7 @@ void(* resetFunc) (void) = 0;
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
-  delay(1000);
+  delay(500);
   Wire.begin();
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
@@ -120,19 +120,17 @@ void setup()
   for (int i = 0 ; i < 17 ; i++)
   {
     lcdI2C.print("\333");
-    delay(600 - i * 35);
+    delay(300 - i * 18);
   }
-  delay(50);
-
+  delay(10);
 
   rotaryEncDButton.init();
   pinMode(RotaryEncoder_PIN_S1, INPUT_PULLUP);
 
-  //  pinMode(STEPPER_PIN_STEP, OUTPUT);
-
   //IR Receiver strart
   irrecv.enableIRIn();
   irrecv.blink13(true);
+
   pinMode(EN, OUTPUT);
   pinMode(DIR, OUTPUT);
   pinMode(PUL, OUTPUT);
@@ -234,7 +232,7 @@ void loop()
         state = VIDZURUECK;
 
       if (select) {
-        //        video();
+        video();
 
       }
       break;
@@ -440,6 +438,59 @@ void stills()
     }
     delay(250);
   }
+}
+
+void video()
+{
+  lcdI2C.clear();
+  lcdI2C.print(F("Start in 3"));
+  Serial.println("Start in 3");
+  delay(1000);
+  lcdI2C.clear();
+  lcdI2C.print(F("Start in 2"));
+  Serial.println("Start in 2");
+  delay(1000);
+  lcdI2C.clear();
+  lcdI2C.print(F("Start in 1"));
+  Serial.println("Start in 1");
+  delay(1000);
+  irVideoShot();
+  lcdI2C.clear();
+  lcdI2C.print(F("Video gestartet"));
+  long numOfSteps = fullRotation;
+  long delayTime = 0;
+  long rpm = 0;
+  for (long n = 0; n < numOfSteps; n++)
+  {
+    if (n < accSteps)
+    {
+      delayTime = (accSteps - n );
+
+      //Serial.println(delayTime);
+    }
+    else if (n > numOfSteps - accSteps)
+    {
+      delayTime = (n - numOfSteps + accSteps);
+
+      //Serial.println(delayTime);
+    }
+    else
+    {
+      delayTime = 0;
+    }
+
+    rpm = basicSpeed + (delayTime / 20);
+
+    digitalWrite(DIR, LOW);
+    digitalWrite(EN, HIGH);
+    digitalWrite(PUL, LOW);
+    delayMicroseconds(rpm);
+    digitalWrite(PUL, HIGH);
+    delayMicroseconds(rpm);
+
+  }
+  irVideoShot();
+  delay(250);
 }
 
 //Sony IR-Codes:
