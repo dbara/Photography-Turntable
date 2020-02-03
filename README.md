@@ -9,5 +9,3 @@ Switched to Sony, added IR Remote Support
 Still WIP, but usable
 
 Suggestions are always welcome ;) 
-
-P.s.: Sorry for my bad Programming skills, I#ll have to work on that
