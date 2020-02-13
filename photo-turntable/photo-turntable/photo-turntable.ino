@@ -21,6 +21,7 @@ const long fullRotation = 102400;
 const int accSteps = ((fullRotation) / 100);
 const int basicSpeed = 20;
 int angles = 8;
+int picpause = 1;
 int speed = 100;
 
 // Define LCD characteristics
@@ -39,7 +40,7 @@ decode_results results;
 
 long rotaryEncDOldPosition  = 0;
 
-enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAHL, VIDZURUECK, STILZURUECK, CHANGEGESCHWINDIGKEIT, CHANGEANZAHL} state = FOTOS, oldState = VIDEO;
+enum menuState {START, VIDEO, FOTOS, VIDSTART, FOTOSTART, GESCHWINDIGKEIT, ANZAHL, VIDZURUECK, STILZURUECK, CHANGEGESCHWINDIGKEIT, CHANGEANZAHL, FOTOPAUSE, CHANGEPAUSE} state = FOTOS, oldState = VIDEO;
 
 // Global variables and defines
 // There are several different versions of the LCD I2C adapter, each might have a different address.
@@ -61,12 +62,12 @@ void setup()
   // Use the Serial Monitor to view printed messages
   Serial.begin(9600);
   while (!Serial);             // Leonardo: wait for serial monitor
-  Serial.println("\nI2C Scan");
+  //Serial.println("\nI2C Scan");
   byte error, address;
   int nDevices;
   int addessI2C;
 
-  Serial.println("Scanning...");
+  //Serial.println("Scanning...");
 
   nDevices = 0;
   for (address = 1; address < 127; address++ )
@@ -85,9 +86,9 @@ void setup()
         Serial.print("0");
       }
       Serial.print(address);
-      Serial.println("!");
+      //Serial.println("!");
       addessI2C = address;
-      Serial.println(addessI2C);
+      //Serial.println(addessI2C);
       nDevices++;
     }
     else if (error == 4)
@@ -97,16 +98,16 @@ void setup()
       {
         Serial.print("0");
       }
-      Serial.println(address);
+      //Serial.println(address);
     }
   }
   if (nDevices == 0)
   {
-    Serial.println("No I2C devices found\n");
+    //Serial.println("No I2C devices found\n");
   }
   else
   {
-    Serial.println("done\n");
+    //Serial.println("done\n");
   }
 
   delay(10);
@@ -168,11 +169,11 @@ void loop()
     }
     if (results.value == 3810010651)
     {
-      Serial.println("resetting");
+      //Serial.println("resetting");
       delay(15);
       resetFunc();
       delay(5);
-      Serial.println("resetted");
+      //Serial.println("resetted");
     }
   }
 
@@ -180,7 +181,7 @@ void loop()
   //Read encoder new position
   long rotaryEncDNewPosition = rotaryEncD.read() / 4;
   if (rotaryEncDNewPosition != rotaryEncDOldPosition) {
-    Serial.println(rotaryEncDNewPosition);
+    //Serial.println(rotaryEncDNewPosition);
     if (rotaryEncDNewPosition < rotaryEncDOldPosition)
     {
       menuDir = 'L';
@@ -197,7 +198,7 @@ void loop()
   if (state != oldState)
   {
     lcdI2C.clear();
-
+    delay(5);
     oldState = state;
   }
 
@@ -303,8 +304,7 @@ void loop()
         state = FOTOSTART;
 
       else if (menuDir == 'R')
-        state = STILZURUECK;
-
+        state = FOTOPAUSE;
 
       if (select)
         state = CHANGEANZAHL;
@@ -334,13 +334,45 @@ void loop()
 
     case STILZURUECK:
       if (menuDir == 'L')
-        state = ANZAHL;
+        state = FOTOPAUSE;
 
       else if (menuDir == 'R')
         state = FOTOSTART;
 
       if (select)
         state = FOTOS;
+      break;
+
+    case FOTOPAUSE:
+      if (menuDir == 'L')
+        state = ANZAHL;
+
+      else if (menuDir == 'R')
+        state = STILZURUECK;
+
+      if (select)
+        state = CHANGEPAUSE;
+      break;
+
+    case CHANGEPAUSE:
+      if (menuDir == 'L')
+      {
+        picpause--;
+        lcdI2C.selectLine(2);
+        lcdI2C.print("     ");
+      }
+      else if (menuDir == 'R')
+      {
+        picpause++;
+        lcdI2C.selectLine(2);
+        lcdI2C.print("     ");
+      }
+
+      lcdI2C.selectLine(2);
+      lcdI2C.print(picpause);
+
+      if (select)
+        state = FOTOSTART;
       break;
   }
 }
@@ -370,6 +402,10 @@ String printState(int curstate)
       return "Geschwindigkeit:";
     case 10:
       return "Anzahl Fotos:";
+    case 11:
+      return "Pause f\365r Foto";
+    case 12:
+      return "Pause in Sek:";
   }
 }
 
@@ -377,23 +413,36 @@ void stills()
 {
   lcdI2C.clear();
   lcdI2C.print(F("Start in 3"));
-  Serial.println("Start in 3");
+  //Serial.println("Start in 3");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 2"));
-  Serial.println("Start in 2");
+  //Serial.println("Start in 2");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 1"));
-  Serial.println("Start in 1");
+  //Serial.println("Start in 1");
   delay(1000);
   for (int i = 0 ; i < angles ; i++) {
     int imagesToTake = angles - i - 1;
     long numOfSteps = (fullRotation / angles);
     long delayTime = 0;
     long rpm = 0;
+    delay(500);
     lcdI2C.clear();
+    lcdI2C.print(F("Ausl\357ser, "));
+    lcdI2C.print(picpause);
+    lcdI2C.selectLine(2);
+    if (picpause == 1)
+    {
+      lcdI2C.print(F("Sekunde Pause"));
+    } else
+    {
+      lcdI2C.print(F("Sekunden Pause"));
+    }
     irStillsShot();
+    delay(1000 * picpause);
+    lcdI2C.clear();
     if (imagesToTake == 1)
     {
       lcdI2C.print(F("Noch "));
@@ -444,15 +493,15 @@ void video()
 {
   lcdI2C.clear();
   lcdI2C.print(F("Start in 3"));
-  Serial.println("Start in 3");
+  //Serial.println("Start in 3");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 2"));
-  Serial.println("Start in 2");
+  //Serial.println("Start in 2");
   delay(1000);
   lcdI2C.clear();
   lcdI2C.print(F("Start in 1"));
-  Serial.println("Start in 1");
+  //Serial.println("Start in 1");
   delay(1000);
   irVideoShot();
   lcdI2C.clear();
@@ -490,6 +539,7 @@ void video()
 
   }
   irVideoShot();
+  lcdI2C.clear();
   delay(250);
 }
 
@@ -507,7 +557,7 @@ void video()
 //Z-        863119    D2B8F   // Zoom out
 
 void irStillsShot() {
-  Serial.println("foto...");
+  //Serial.println("foto...");
   for (int i = 0; i < 3; i++)
   {
     ir_led.sendSony(0xB4B8F, 20);
@@ -518,7 +568,7 @@ void irStillsShot() {
 }
 
 void irVideoShot() {
-  Serial.println("video...");
+  //Serial.println("video...");
   for (int i = 0; i < 3; i++)
   {
     ir_led.sendSony(0x12B8F, 20);
