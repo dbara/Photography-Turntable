@@ -17,9 +17,9 @@
 #define PUL 10
 
 // set default parameters
-const long fullRotation = 102400;
-const int accSteps = ((fullRotation) / 100);
-const int basicSpeed = 20;
+const long fullRotation = 266920;
+const long accSteps = ((fullRotation) / 150);
+const int basicSpeed = 1;
 int angles = 8;
 int picpause = 1;
 int speed = 100;
