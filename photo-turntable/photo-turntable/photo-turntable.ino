@@ -17,10 +17,10 @@
 #define PUL 10
 
 // set default parameters
-const long fullRotation = 266920;
+const long fullRotation = 274500;
 const long accSteps = ((fullRotation) / 150);
 const int basicSpeed = 1;
-int angles = 8;
+int angles = 64;
 int picpause = 1;
 int speed = 100;
 
@@ -61,7 +61,7 @@ void setup()
   // Setup Serial which is useful for debugging
   // Use the Serial Monitor to view printed messages
   Serial.begin(9600);
-  while (!Serial);             // Leonardo: wait for serial monitor
+  while (!Serial);             // wait for serial monitor
   //Serial.println("\nI2C Scan");
   byte error, address;
   int nDevices;
@@ -528,7 +528,7 @@ void video()
       delayTime = 0;
     }
 
-    rpm = basicSpeed + (delayTime / 20);
+    rpm = (basicSpeed + (delayTime / 20))*(100/speed);
 
     digitalWrite(DIR, LOW);
     digitalWrite(EN, HIGH);
